@@ -5,8 +5,8 @@ import prisma, { handlePrismaError } from "./prisma";
 export const server = Fastify();
 
 server.setErrorHandler(function (error, request, reply) {
-	console.error(request.url);
-	console.error(request.body);
+	console.error("url", request.url);
+	console.error("body", request.body);
 	console.error(error.message);
 
 	const res = handlePrismaError(error);
@@ -29,9 +29,16 @@ server.get("/healthcheck", async () => {
 server.get("/dbhealthcheck", async () => {
 	const res = await prisma.$queryRaw`SELECT 1;`;
 
-	console.log(res);
+	if (res) {
+		return { status: 200, success: true, message: "OK", response: null };
+	}
 
-	return { res: String(res) };
+	return {
+		status: 500,
+		success: false,
+		message: "Internal server error",
+		response: null,
+	};
 });
 
 const main = async () => {
@@ -41,7 +48,7 @@ const main = async () => {
 			port: 3000,
 		});
 
-		console.log("Node running at http://localhost:3000");
+		console.log("\t--- Node running ---");
 	} catch (error) {
 		console.error(error);
 		process.exit(1);
